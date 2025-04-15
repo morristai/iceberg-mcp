@@ -18,7 +18,7 @@ pub enum CatalogConfig {
 pub struct TableProperties {
     properties: HashMap<String, String>,
     additional_properties: HashMap<String, String>,
-    partition: PartitionSpec,
+    partition: Vec<PartitionSpec>,
     sort_orders: Vec<SortOrder>,
 }
 

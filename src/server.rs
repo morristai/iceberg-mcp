@@ -122,10 +122,12 @@ impl CatalogWrapper {
             .map(|snapshot| snapshot.summary().additional_properties.clone())
             .unwrap_or_default();
 
-        let default_partition_spec = table.metadata().default_partition_spec().as_ref().clone();
+        let partition_spec = metadata
+            .partition_specs_iter()
+            .map(|arc| arc.as_ref().clone())
+            .collect();
 
-        let sort_order: Vec<SortOrder> = table
-            .metadata()
+        let sort_order: Vec<SortOrder> = metadata
             .sort_orders_iter()
             .map(|arc| arc.as_ref().clone())
             .collect();
@@ -133,7 +135,7 @@ impl CatalogWrapper {
         let table_properties = TableProperties::builder()
             .properties(properties)
             .additional_properties(additional_properties)
-            .partition(default_partition_spec)
+            .partition(partition_spec)
             .sort_orders(sort_order)
             .build();
 
