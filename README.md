@@ -20,17 +20,22 @@ An [MCP](https://modelcontextprotocol.io/introduction) server for [Apache Iceber
 | `table_schema`     | Return the schema for a given table            |
 | `table_properties` | Return table properties for a given table      |
 
-## Setup
+## Installation
 
-### Option 1: Download the Release Binary [Work in Progress]
+### Option 1: Download the Release Binary
 
-[//]: # (- https://github.com/morristai/iceberg-mcp/releases)
+Download the latest pre-built binary from the [Releases page](https://github.com/morristai/iceberg-mcp/releases).
+
 
 ### Option 2: Build from Source
+
+To build the project manually, ensure you have [Rust](https://www.rust-lang.org/tools/install) installed, then run:
 
 ```shell
 cargo build --release
 ```
+
+The compiled binary will be located at: `./target/release/iceberg-mcp`
 
 ## Client Configuration
 
