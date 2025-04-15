@@ -1,23 +1,44 @@
-use crate::utils::TableProperties;
+use crate::utils::{CatalogConfig, TableProperties};
 use iceberg::spec::SortOrder;
 use iceberg::{Catalog, NamespaceIdent, TableIdent};
-use iceberg_catalog_rest::{RestCatalog, RestCatalogConfig};
+use iceberg_catalog_glue::GlueCatalog;
+use iceberg_catalog_rest::RestCatalog;
 use rmcp::{Error as McpError, ServerHandler, model::*, tool};
 use serde_json::json;
 use std::sync::Arc;
 
 #[derive(Debug, Clone)]
-pub struct RestCatalogWrapper(Arc<RestCatalog>);
+pub struct CatalogWrapper {
+    catalog: Arc<dyn Catalog>,
+}
 
 #[tool(tool_box)]
-impl RestCatalogWrapper {
-    pub fn new(config: RestCatalogConfig) -> Self {
-        Self(Arc::new(RestCatalog::new(config)))
+impl CatalogWrapper {
+    pub async fn new(config: CatalogConfig) -> Result<Self, McpError> {
+        match config {
+            CatalogConfig::Rest(config) => {
+                let catalog = CatalogWrapper {
+                    catalog: Arc::new(RestCatalog::new(config)),
+                };
+                Ok(catalog)
+            }
+            CatalogConfig::Glue(config) => {
+                let catalog = GlueCatalog::new(config).await.map_err(|e| {
+                    McpError::internal_error(
+                        "fail to create Glue catalog client",
+                        Some(json!({"reason": e.to_string()})),
+                    )
+                })?;
+                Ok(CatalogWrapper {
+                    catalog: Arc::new(catalog),
+                })
+            }
+        }
     }
 
     #[tool(description = "Get Iceberg namespaces")]
     async fn get_namespaces(&self) -> Result<CallToolResult, McpError> {
-        let existing_namespaces = self.0.list_namespaces(None).await.map_err(|e| {
+        let existing_namespaces = self.catalog.list_namespaces(None).await.map_err(|e| {
             McpError::internal_error(
                 "fail to list namespaces",
                 Some(json!({"reason": e.to_string()})),
@@ -44,7 +65,7 @@ impl RestCatalogWrapper {
             )
         })?;
 
-        let tables = self.0.list_tables(&namespace).await.map_err(|e| {
+        let tables = self.catalog.list_tables(&namespace).await.map_err(|e| {
             McpError::internal_error(
                 "fail to list tables",
                 Some(json!({"reason": e.to_string()})),
@@ -66,7 +87,7 @@ impl RestCatalogWrapper {
             )
         })?;
         let table_ident = TableIdent::new(namespace, table_name);
-        let table = self.0.load_table(&table_ident).await.map_err(|e| {
+        let table = self.catalog.load_table(&table_ident).await.map_err(|e| {
             McpError::internal_error("fail to load table", Some(json!({"reason": e.to_string()})))
         })?;
         let schema = table.metadata().current_schema();
@@ -88,7 +109,7 @@ impl RestCatalogWrapper {
             )
         })?;
         let table_ident = TableIdent::new(namespace, table_name);
-        let table = self.0.load_table(&table_ident).await.map_err(|e| {
+        let table = self.catalog.load_table(&table_ident).await.map_err(|e| {
             McpError::internal_error("fail to load table", Some(json!({"reason": e.to_string()})))
         })?;
 
@@ -123,7 +144,7 @@ impl RestCatalogWrapper {
 }
 
 #[tool(tool_box)]
-impl ServerHandler for RestCatalogWrapper {
+impl ServerHandler for CatalogWrapper {
     fn get_info(&self) -> ServerInfo {
         ServerInfo {
             protocol_version: ProtocolVersion::V_2025_03_26,

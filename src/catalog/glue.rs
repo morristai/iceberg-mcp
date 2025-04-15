@@ -5,9 +5,11 @@ use iceberg_catalog_glue::{GlueCatalog, GlueCatalogConfig};
 use rmcp::{Error as McpError, ServerHandler, model::*, tool};
 use serde_json::json;
 use std::sync::Arc;
+use iceberg_catalog_rest::RestCatalog;
 
 #[derive(Debug, Clone)]
 pub struct GlueCatalogWrapper(Arc<GlueCatalog>);
+
 
 #[tool(tool_box)]
 impl GlueCatalogWrapper {
