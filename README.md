@@ -1,14 +1,17 @@
 # Iceberg MCP
 
-MCP server for Apache Iceberg catalogs with async and logging.
+An [MCP](https://modelcontextprotocol.io/introduction) server for [Apache Iceberg](https://iceberg.apache.org/) catalogs with async and logging.
 
-## Supported Catalogs
+### Supported Catalogs
 
-- ✅ Rest Catalogs
-- ✅ AWS Glue
-- ❌ Hive metastore
+| Catalog Type   | Supported |
+|----------------|-----------|
+| Rest Catalogs  | ✅        |
+| AWS Glue       | ✅        |
+| Hive Metastore | ❌        |
+| S3 Table       | ❌        |
 
-## Supported Tools
+### Supported Tools
 
 | Tools              | Description                                    |
 |--------------------|------------------------------------------------|
@@ -17,27 +20,29 @@ MCP server for Apache Iceberg catalogs with async and logging.
 | `table_schema`     | Return the schema for a given table            |
 | `table_properties` | Return table properties for a given table      |
 
-# Setup
+## Setup
 
-## Download the release binary [WIP]
+### Option 1: Download the Release Binary [Work in Progress]
 
 [//]: # (- https://github.com/morristai/iceberg-mcp/releases)
 
-## Build from source
+### Option 2: Build from Source
 
 ```shell
 cargo build --release
 ```
 
-# Client
+## Client Configuration
 
-## Claude Desktop
+### Claude Desktop
 
-In Claude desktop, go to `Settings` > `Developer` > `Edit Config` > `claude_desktop_config.json` and add the following:
+To integrate Iceberg MCP with Claude Desktop:
+1. Open `Settings` > `Developer` > `Edit Config`.
+2. Update `claude_desktop_config.json` with the appropriate configuration:
+
+- Rest Catalogs
 
 ```json
-
-// Rest Catalog
 {
   "mcpServers": {
     "iceberg-mcp": {
@@ -50,15 +55,17 @@ In Claude desktop, go to `Settings` > `Developer` > `Edit Config` > `claude_desk
     }
   }
 }
+```
 
-// Glue Catalog
+- AWS Glue Catalogs
+
+```json
 {
   "mcpServers": {
     "iceberg-mcp": {
       "command": "PATH-TO-BINARY/iceberg-mcp",
       "env": {
         "CATALOG_KIND": "glue",
-        // NOTE: full path needed, Rust SDK currently does not support $HOME or `~`
         "AWS_CONFIG_FILE": "/Users/{your_username}/.aws/config",
         "AWS_SHARED_CREDENTIALS_FILE": "/Users/{your_username}/.aws/credentials",
         "PROFILE_NAME": "default",
@@ -70,7 +77,11 @@ In Claude desktop, go to `Settings` > `Developer` > `Edit Config` > `claude_desk
 }
 ```
 
-### Debug in Claude Desktop
+## Debugging 
+
+### Claude Desktop
+
+View logs for troubleshooting with:
 
 ```shell
 tail -n 20 -F ~/Library/Logs/Claude/mcp-server-iceberg-mcp.log
