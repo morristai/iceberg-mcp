@@ -2,6 +2,9 @@
 
 An [MCP](https://modelcontextprotocol.io/introduction) server for [Apache Iceberg](https://iceberg.apache.org/) catalogs with async and logging.
 
+[Iceberg MCP DEMO](https://github.com/user-attachments/assets/13c22d3c-c0a1-4767-acfa-1ffdd1941afd)
+
+
 ### Supported Catalogs
 
 | Catalog Type   | Supported |
