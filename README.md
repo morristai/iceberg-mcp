@@ -8,11 +8,11 @@ An [MCP](https://modelcontextprotocol.io/introduction) server for [Apache Iceber
 ### Supported Catalogs
 
 | Catalog Type   | Supported |
-|----------------|-----------|
-| Rest Catalogs  | ✅        |
-| AWS Glue       | ✅        |
-| Hive Metastore | ❌        |
-| S3 Table       | ❌        |
+|----------------|---------|
+| Rest Catalogs  | ✅       |
+| AWS Glue       | ✅       |
+| Hive Metastore | ✅       |
+| S3 Table       | ❌       |
 
 ### Supported Tools
 

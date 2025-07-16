@@ -23,6 +23,10 @@ async fn main() -> Result<()> {
             tracing::info!("Using REST catalog");
             CatalogConfig::Rest(init_rest_catalog()?)
         }
+        "hms" => {
+            tracing::info!("Using Hive Metastore catalog");
+            CatalogConfig::Hms(init_hms_catalog()?)
+        }
         _ => {
             eprintln!("Invalid catalog kind: {}", catalog_kind);
             std::process::exit(1);

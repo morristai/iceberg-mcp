@@ -7,13 +7,14 @@ authors = ["Morris Tai <morristai@apache.org>"]
 
 [dependencies]
 rmcp = { git = "https://github.com/modelcontextprotocol/rust-sdk", branch = "main", features = ["transport-io"] }
-iceberg = "0.4.0"
-iceberg-catalog-rest = "0.4.0"
-iceberg-catalog-glue = "0.4.0"
+iceberg = "0.5.1"
+iceberg-catalog-rest = "0.5.1"
+iceberg-catalog-glue = "0.5.1"
+iceberg-catalog-hms = "0.5.1"
 anyhow = "1"
 tokio = "1.44"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "std", "fmt"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0.140"
-typed-builder = "0.20"
+typed-builder = "0.21"

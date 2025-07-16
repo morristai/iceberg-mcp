@@ -33,6 +33,19 @@ impl CatalogWrapper {
                     catalog: Arc::new(catalog),
                 })
             }
+            CatalogConfig::Hms(config) => {
+                let catalog = iceberg_catalog_hms::HmsCatalog::new(config)
+                    .await
+                    .map_err(|e| {
+                        McpError::internal_error(
+                            "fail to create HMS catalog client",
+                            Some(json!({"reason": e.to_string()})),
+                        )
+                    })?;
+                Ok(CatalogWrapper {
+                    catalog: Arc::new(catalog),
+                })
+            }
         }
     }
 
