@@ -3,22 +3,25 @@ use iceberg::spec::SortOrder;
 use iceberg::{Catalog, NamespaceIdent, TableIdent};
 use iceberg_catalog_glue::GlueCatalog;
 use iceberg_catalog_rest::RestCatalog;
-use rmcp::{Error as McpError, ServerHandler, model::*, tool};
+use rmcp::handler::server::tool::{Parameters, ToolRouter};
+use rmcp::{ErrorData as McpError, ServerHandler, model::*, tool, tool_handler, tool_router};
 use serde_json::json;
 use std::sync::Arc;
 
 #[derive(Debug, Clone)]
 pub struct CatalogWrapper {
     catalog: Arc<dyn Catalog>,
+    tool_router: ToolRouter<Self>,
 }
 
-#[tool(tool_box)]
+#[tool_router]
 impl CatalogWrapper {
     pub async fn new(config: CatalogConfig) -> Result<Self, McpError> {
         match config {
             CatalogConfig::Rest(config) => {
                 let catalog = CatalogWrapper {
                     catalog: Arc::new(RestCatalog::new(config)),
+                    tool_router: Self::tool_router(),
                 };
                 Ok(catalog)
             }
@@ -31,6 +34,7 @@ impl CatalogWrapper {
                 })?;
                 Ok(CatalogWrapper {
                     catalog: Arc::new(catalog),
+                    tool_router: Self::tool_router(),
                 })
             }
         }
@@ -56,7 +60,7 @@ impl CatalogWrapper {
     #[tool(description = "Get Iceberg tables")]
     async fn get_tables(
         &self,
-        #[tool(param)] namespace: String,
+        Parameters(namespace): Parameters<String>,
     ) -> Result<CallToolResult, McpError> {
         let namespace = NamespaceIdent::from_vec(vec![namespace]).map_err(|e| {
             McpError::invalid_params(
@@ -77,8 +81,8 @@ impl CatalogWrapper {
     #[tool(description = "Get Iceberg table schema")]
     async fn get_table_schema(
         &self,
-        #[tool(param)] namespace: String,
-        #[tool(param)] table_name: String,
+        Parameters(namespace): Parameters<String>,
+        Parameters(table_name): Parameters<String>,
     ) -> Result<CallToolResult, McpError> {
         let namespace = NamespaceIdent::from_vec(vec![namespace]).map_err(|e| {
             McpError::invalid_params(
@@ -99,8 +103,8 @@ impl CatalogWrapper {
     #[tool(description = "Get Iceberg table properties")]
     async fn get_table_properties(
         &self,
-        #[tool(param)] namespace: String,
-        #[tool(param)] table_name: String,
+        Parameters(namespace): Parameters<String>,
+        Parameters(table_name): Parameters<String>,
     ) -> Result<CallToolResult, McpError> {
         let namespace = NamespaceIdent::from_vec(vec![namespace]).map_err(|e| {
             McpError::invalid_params(
@@ -145,7 +149,7 @@ impl CatalogWrapper {
     }
 }
 
-#[tool(tool_box)]
+#[tool_handler]
 impl ServerHandler for CatalogWrapper {
     fn get_info(&self) -> ServerInfo {
         ServerInfo {
@@ -156,7 +160,7 @@ impl ServerHandler for CatalogWrapper {
                 .enable_tools()
                 .build(),
             server_info: Implementation::from_build_env(),
-            instructions: Some("Iceberg Rest Catalog MCP".to_string()),
+            instructions: Some("Iceberg MCP Server".to_string()),
         }
     }
 }
