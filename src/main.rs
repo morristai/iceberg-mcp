@@ -24,7 +24,7 @@ async fn main() -> Result<()> {
             CatalogConfig::Rest(init_rest_catalog()?)
         }
         _ => {
-            eprintln!("Invalid catalog kind: {}", catalog_kind);
+            eprintln!("Invalid catalog kind: {catalog_kind}");
             std::process::exit(1);
         }
     };

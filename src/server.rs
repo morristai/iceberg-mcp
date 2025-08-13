@@ -3,22 +3,37 @@ use iceberg::spec::SortOrder;
 use iceberg::{Catalog, NamespaceIdent, TableIdent};
 use iceberg_catalog_glue::GlueCatalog;
 use iceberg_catalog_rest::RestCatalog;
-use rmcp::{Error as McpError, ServerHandler, model::*, tool};
+use rmcp::{
+    ErrorData as McpError, ServerHandler,
+    handler::server::{router::tool::ToolRouter, tool::Parameters},
+    model::*,
+    tool, tool_handler, tool_router,
+};
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::sync::Arc;
 
-#[derive(Debug, Clone)]
-pub struct CatalogWrapper {
-    catalog: Arc<dyn Catalog>,
+#[derive(Debug, JsonSchema, Deserialize, Serialize)]
+struct IcebergObjectRequest {
+    namespace: String,
+    table: Option<String>,
 }
 
-#[tool(tool_box)]
+#[derive(Clone)]
+pub struct CatalogWrapper {
+    catalog: Arc<dyn Catalog>,
+    tool_router: ToolRouter<Self>,
+}
+
+#[tool_router]
 impl CatalogWrapper {
     pub async fn new(config: CatalogConfig) -> Result<Self, McpError> {
         match config {
             CatalogConfig::Rest(config) => {
                 let catalog = CatalogWrapper {
                     catalog: Arc::new(RestCatalog::new(config)),
+                    tool_router: Self::tool_router(),
                 };
                 Ok(catalog)
             }
@@ -31,6 +46,7 @@ impl CatalogWrapper {
                 })?;
                 Ok(CatalogWrapper {
                     catalog: Arc::new(catalog),
+                    tool_router: Self::tool_router(),
                 })
             }
         }
@@ -56,7 +72,7 @@ impl CatalogWrapper {
     #[tool(description = "Get Iceberg tables")]
     async fn get_tables(
         &self,
-        #[tool(param)] namespace: String,
+        Parameters(IcebergObjectRequest { namespace, .. }): Parameters<IcebergObjectRequest>,
     ) -> Result<CallToolResult, McpError> {
         let namespace = NamespaceIdent::from_vec(vec![namespace]).map_err(|e| {
             McpError::invalid_params(
@@ -77,8 +93,7 @@ impl CatalogWrapper {
     #[tool(description = "Get Iceberg table schema")]
     async fn get_table_schema(
         &self,
-        #[tool(param)] namespace: String,
-        #[tool(param)] table_name: String,
+        Parameters(IcebergObjectRequest { namespace, table }): Parameters<IcebergObjectRequest>,
     ) -> Result<CallToolResult, McpError> {
         let namespace = NamespaceIdent::from_vec(vec![namespace]).map_err(|e| {
             McpError::invalid_params(
@@ -86,7 +101,7 @@ impl CatalogWrapper {
                 Some(json!({"reason": e.to_string()})),
             )
         })?;
-        let table_ident = TableIdent::new(namespace, table_name);
+        let table_ident = TableIdent::new(namespace, table.unwrap());
         let table = self.catalog.load_table(&table_ident).await.map_err(|e| {
             McpError::internal_error("fail to load table", Some(json!({"reason": e.to_string()})))
         })?;
@@ -99,8 +114,7 @@ impl CatalogWrapper {
     #[tool(description = "Get Iceberg table properties")]
     async fn get_table_properties(
         &self,
-        #[tool(param)] namespace: String,
-        #[tool(param)] table_name: String,
+        Parameters(IcebergObjectRequest { namespace, table }): Parameters<IcebergObjectRequest>,
     ) -> Result<CallToolResult, McpError> {
         let namespace = NamespaceIdent::from_vec(vec![namespace]).map_err(|e| {
             McpError::invalid_params(
@@ -108,7 +122,7 @@ impl CatalogWrapper {
                 Some(json!({"reason": e.to_string()})),
             )
         })?;
-        let table_ident = TableIdent::new(namespace, table_name);
+        let table_ident = TableIdent::new(namespace, table.unwrap());
         let table = self.catalog.load_table(&table_ident).await.map_err(|e| {
             McpError::internal_error("fail to load table", Some(json!({"reason": e.to_string()})))
         })?;
@@ -145,18 +159,14 @@ impl CatalogWrapper {
     }
 }
 
-#[tool(tool_box)]
+#[tool_handler]
 impl ServerHandler for CatalogWrapper {
     fn get_info(&self) -> ServerInfo {
         ServerInfo {
-            protocol_version: ProtocolVersion::V_2025_03_26,
-            capabilities: ServerCapabilities::builder()
-                .enable_prompts()
-                .enable_resources()
-                .enable_tools()
-                .build(),
+            capabilities: ServerCapabilities::builder().enable_tools().build(),
             server_info: Implementation::from_build_env(),
-            instructions: Some("Iceberg Rest Catalog MCP".to_string()),
+            instructions: Some("Iceberg MCP Server".to_string()),
+            ..Default::default()
         }
     }
 }
