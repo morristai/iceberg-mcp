@@ -3,12 +3,24 @@ use iceberg::spec::SortOrder;
 use iceberg::{Catalog, NamespaceIdent, TableIdent};
 use iceberg_catalog_glue::GlueCatalog;
 use iceberg_catalog_rest::RestCatalog;
-use rmcp::handler::server::tool::{Parameters, ToolRouter};
-use rmcp::{ErrorData as McpError, ServerHandler, model::*, tool, tool_handler, tool_router};
+use rmcp::{
+    ErrorData as McpError, ServerHandler,
+    handler::server::{router::tool::ToolRouter, tool::Parameters},
+    model::*,
+    tool, tool_handler, tool_router,
+};
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::sync::Arc;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, JsonSchema, Deserialize, Serialize)]
+struct IcebergObjectRequest {
+    namespace: String,
+    table: Option<String>,
+}
+
+#[derive(Clone)]
 pub struct CatalogWrapper {
     catalog: Arc<dyn Catalog>,
     tool_router: ToolRouter<Self>,
@@ -60,7 +72,7 @@ impl CatalogWrapper {
     #[tool(description = "Get Iceberg tables")]
     async fn get_tables(
         &self,
-        Parameters(namespace): Parameters<String>,
+        Parameters(IcebergObjectRequest { namespace, .. }): Parameters<IcebergObjectRequest>,
     ) -> Result<CallToolResult, McpError> {
         let namespace = NamespaceIdent::from_vec(vec![namespace]).map_err(|e| {
             McpError::invalid_params(
@@ -81,8 +93,7 @@ impl CatalogWrapper {
     #[tool(description = "Get Iceberg table schema")]
     async fn get_table_schema(
         &self,
-        Parameters(namespace): Parameters<String>,
-        Parameters(table_name): Parameters<String>,
+        Parameters(IcebergObjectRequest { namespace, table }): Parameters<IcebergObjectRequest>,
     ) -> Result<CallToolResult, McpError> {
         let namespace = NamespaceIdent::from_vec(vec![namespace]).map_err(|e| {
             McpError::invalid_params(
@@ -90,7 +101,7 @@ impl CatalogWrapper {
                 Some(json!({"reason": e.to_string()})),
             )
         })?;
-        let table_ident = TableIdent::new(namespace, table_name);
+        let table_ident = TableIdent::new(namespace, table.unwrap());
         let table = self.catalog.load_table(&table_ident).await.map_err(|e| {
             McpError::internal_error("fail to load table", Some(json!({"reason": e.to_string()})))
         })?;
@@ -103,8 +114,7 @@ impl CatalogWrapper {
     #[tool(description = "Get Iceberg table properties")]
     async fn get_table_properties(
         &self,
-        Parameters(namespace): Parameters<String>,
-        Parameters(table_name): Parameters<String>,
+        Parameters(IcebergObjectRequest { namespace, table }): Parameters<IcebergObjectRequest>,
     ) -> Result<CallToolResult, McpError> {
         let namespace = NamespaceIdent::from_vec(vec![namespace]).map_err(|e| {
             McpError::invalid_params(
@@ -112,7 +122,7 @@ impl CatalogWrapper {
                 Some(json!({"reason": e.to_string()})),
             )
         })?;
-        let table_ident = TableIdent::new(namespace, table_name);
+        let table_ident = TableIdent::new(namespace, table.unwrap());
         let table = self.catalog.load_table(&table_ident).await.map_err(|e| {
             McpError::internal_error("fail to load table", Some(json!({"reason": e.to_string()})))
         })?;
@@ -153,14 +163,10 @@ impl CatalogWrapper {
 impl ServerHandler for CatalogWrapper {
     fn get_info(&self) -> ServerInfo {
         ServerInfo {
-            protocol_version: ProtocolVersion::V_2025_03_26,
-            capabilities: ServerCapabilities::builder()
-                .enable_prompts()
-                .enable_resources()
-                .enable_tools()
-                .build(),
+            capabilities: ServerCapabilities::builder().enable_tools().build(),
             server_info: Implementation::from_build_env(),
             instructions: Some("Iceberg MCP Server".to_string()),
+            ..Default::default()
         }
     }
 }
