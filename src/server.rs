@@ -4,10 +4,10 @@ use iceberg::{Catalog, NamespaceIdent, TableIdent};
 use iceberg_catalog_glue::GlueCatalog;
 use iceberg_catalog_rest::RestCatalog;
 use rmcp::{
-    ErrorData as McpError, ServerHandler,
-    handler::server::{router::tool::ToolRouter, tool::Parameters},
-    model::*,
-    tool, tool_handler, tool_router,
+    handler::server::{router::tool::ToolRouter, wrapper::Parameters}, model::*,
+    tool,
+    tool_handler,
+    tool_router, ErrorData as McpError, ServerHandler,
 };
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
