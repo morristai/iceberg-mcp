@@ -6,7 +6,7 @@ edition = "2024"
 authors = ["Morris Tai <morristai@apache.org>"]
 
 [dependencies]
-rmcp = { version = "0.6.3", features = ["server", "transport-io"] }
+rmcp = { version = "0.8.3", features = ["server", "transport-io"] }
 iceberg = "0.6"
 iceberg-catalog-rest = "0.6"
 iceberg-catalog-glue = "0.6"
