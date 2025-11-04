@@ -7,9 +7,9 @@ authors = ["Morris Tai <morristai@apache.org>"]
 
 [dependencies]
 rmcp = { version = "0.8.3", features = ["server", "transport-io"] }
-iceberg = "0.6"
-iceberg-catalog-rest = "0.6"
-iceberg-catalog-glue = "0.6"
+iceberg = "0.7"
+iceberg-catalog-rest = "0.7"
+iceberg-catalog-glue = "0.7"
 anyhow = "1"
 tokio = "1.44"
 tracing = "0.1"

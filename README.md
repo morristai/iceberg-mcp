@@ -68,6 +68,7 @@ To integrate Iceberg MCP with Claude Desktop:
 - AWS Glue Catalogs
 
 ```json
+// use PROFILE_NAME
 {
   "mcpServers": {
     "iceberg-mcp": {
@@ -77,7 +78,30 @@ To integrate Iceberg MCP with Claude Desktop:
         "AWS_CONFIG_FILE": "/Users/{your_username}/.aws/config",
         "AWS_SHARED_CREDENTIALS_FILE": "/Users/{your_username}/.aws/credentials",
         "PROFILE_NAME": "default",
-        "WAREHOUSE": "s3://{bucket_name}/{namespace}/{table}",
+        "GLUE_WAREHOUSE": "s3://{bucket_name}",
+        "GLUE_ENDPOINT": "http://localhost:9000", // Glue service endpoint, optional
+        "LOG_LEVEL": "info"
+      }
+    }
+  }
+}
+
+// or use ACCESS_KEY and SECRET_KEY
+{
+  "mcpServers": {
+    "iceberg-mcp": {
+      "command": "PATH-TO-BINARY/iceberg-mcp",
+      "env": {
+        "CATALOG_KIND": "glue",
+        "GLUE_WAREHOUSE": "s3a://{bucket_name}",
+        "GLUE_ENDPOINT": "http://localhost:9000", // Glue service endpoint, optional
+        "AWS_ACCESS_KEY_ID": "my_access_id",
+        "AWS_SECRET_ACCESS_KEY": "my_secret_key",
+        "AWS_REGION_NAME": "us-east-1",
+        "S3_ENDPOINT": "http://localhost:9000",
+        "S3_ACCESS_KEY_ID": "admin",
+        "S3_SECRET_ACCESS_KEY": "password",
+        "S3_REGION": "us-east-1",
         "LOG_LEVEL": "info"
       }
     }

@@ -14,14 +14,14 @@ async fn main() -> Result<()> {
     let catalog_kind =
         env::var("CATALOG_KIND").expect("Environment variable `CATALOG_KIND` not set.");
 
-    let config = match catalog_kind.as_str() {
+    let catalog = match catalog_kind.as_str() {
         "glue" => {
             tracing::info!("Using Glue catalog");
-            CatalogConfig::Glue(init_glue_catalog()?)
+            CatalogKind::Glue(init_glue_catalog().await?)
         }
         "rest" => {
             tracing::info!("Using REST catalog");
-            CatalogConfig::Rest(init_rest_catalog()?)
+            CatalogKind::Rest(init_rest_catalog().await?)
         }
         _ => {
             eprintln!("Invalid catalog kind: {catalog_kind}");
@@ -31,7 +31,7 @@ async fn main() -> Result<()> {
 
     tracing::info!("Starting Iceberg Glue MCP server");
 
-    let service = CatalogWrapper::new(config)
+    let service = CatalogWrapper::new(catalog)
         .await?
         .serve(stdio())
         .await

@@ -1,13 +1,12 @@
-use crate::utils::{CatalogConfig, TableProperties};
+use crate::utils::{CatalogKind, TableProperties};
 use iceberg::spec::SortOrder;
 use iceberg::{Catalog, NamespaceIdent, TableIdent};
-use iceberg_catalog_glue::GlueCatalog;
-use iceberg_catalog_rest::RestCatalog;
+
 use rmcp::{
-    handler::server::{router::tool::ToolRouter, wrapper::Parameters}, model::*,
-    tool,
-    tool_handler,
-    tool_router, ErrorData as McpError, ServerHandler,
+    ErrorData as McpError, ServerHandler,
+    handler::server::{router::tool::ToolRouter, wrapper::Parameters},
+    model::*,
+    tool, tool_handler, tool_router,
 };
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -28,27 +27,16 @@ pub struct CatalogWrapper {
 
 #[tool_router]
 impl CatalogWrapper {
-    pub async fn new(config: CatalogConfig) -> Result<Self, McpError> {
-        match config {
-            CatalogConfig::Rest(config) => {
-                let catalog = CatalogWrapper {
-                    catalog: Arc::new(RestCatalog::new(config)),
-                    tool_router: Self::tool_router(),
-                };
-                Ok(catalog)
-            }
-            CatalogConfig::Glue(config) => {
-                let catalog = GlueCatalog::new(config).await.map_err(|e| {
-                    McpError::internal_error(
-                        "fail to create Glue catalog client",
-                        Some(json!({"reason": e.to_string()})),
-                    )
-                })?;
-                Ok(CatalogWrapper {
-                    catalog: Arc::new(catalog),
-                    tool_router: Self::tool_router(),
-                })
-            }
+    pub async fn new(catalog: CatalogKind) -> Result<Self, McpError> {
+        match catalog {
+            CatalogKind::Rest(catalog) => Ok(CatalogWrapper {
+                catalog: Arc::new(catalog),
+                tool_router: Self::tool_router(),
+            }),
+            CatalogKind::Glue(catalog) => Ok(CatalogWrapper {
+                catalog: Arc::new(catalog),
+                tool_router: Self::tool_router(),
+            }),
         }
     }
 
