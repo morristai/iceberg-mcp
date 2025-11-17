@@ -67,9 +67,6 @@ pub async fn init_rest_catalog() -> Result<RestCatalog> {
 pub async fn init_glue_catalog() -> Result<GlueCatalog> {
     let mut glue_props = HashMap::new();
 
-    if let Ok(val) = env::var("GLUE_ENDPOINT") {
-        glue_props.insert(GLUE_CATALOG_PROP_URI.to_string(), val);
-    }
     if let Ok(val) = env::var("GLUE_WAREHOUSE") {
         glue_props.insert(GLUE_CATALOG_PROP_WAREHOUSE.to_string(), val);
     }
@@ -82,6 +79,10 @@ pub async fn init_glue_catalog() -> Result<GlueCatalog> {
         }
         if let Ok(val) = env::var("AWS_SECRET_ACCESS_KEY") {
             glue_props.insert(AWS_SECRET_ACCESS_KEY.to_string(), val);
+        }
+
+        if let Ok(val) = env::var("GLUE_ENDPOINT") {
+            glue_props.insert(GLUE_CATALOG_PROP_URI.to_string(), val);
         }
 
         glue_props.insert(

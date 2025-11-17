@@ -94,7 +94,7 @@ To integrate Iceberg MCP with Claude Desktop:
       "env": {
         "CATALOG_KIND": "glue",
         "GLUE_WAREHOUSE": "s3a://{bucket_name}",
-        "GLUE_ENDPOINT": "http://localhost:9000", // Glue service endpoint, optional
+        "GLUE_ENDPOINT": "http://localhost:9000", // Optional
         "AWS_ACCESS_KEY_ID": "my_access_id",
         "AWS_SECRET_ACCESS_KEY": "my_secret_key",
         "AWS_REGION_NAME": "us-east-1",
